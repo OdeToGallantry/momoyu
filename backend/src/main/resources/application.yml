@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  # 本机密钥写在 application-local.yml（已 gitignore），有则自动加载
+  config:
+    import: optional:classpath:application-local.yml
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+  datasource:
+    url: jdbc:mysql://localhost:3306/eatchoice?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    # 本机 MySQL：用户 hsq；root 已锁定，勿再用 root 连接
+    username: ${MYSQL_USER:hsq}
+    password: ${MYSQL_PASSWORD:rollo664283}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+  packages-to-scan: com.example.bookmark
+  paths-to-match: /api/**
+
+app:
+  jwt:
+    # HS256 密钥至少 32 字节；可用环境变量 JWT_SECRET 覆盖
+    secret: ${JWT_SECRET:eatchoice-dev-jwt-secret-change-me-32b}
+    expiration-ms: 86400000
+  zhipu:
+    # 普通用户 USER → 智谱 GLM；勿把 Key 写进仓库
+    api-key: ${ZHIPU_API_KEY:}
+    base-url: https://open.bigmodel.cn/api/paas/v4
+    model: glm-4.7-flash
+    max-tokens: 2048
+    temperature: 0.7
+    # 超过 12 条时摘要旧消息，保留最近 6 条原文
+    compact-threshold: 12
+    compact-keep-recent: 6
+    compact-max-tokens: 320
+  kimi:
+    # 管理员 ADMIN → Kimi For Coding；OpenAI 兼容根路径需带 /v1
+    # （用户侧常写 https://api.kimi.com/coding/ ，那是 Anthropic 协议根）
+    api-key: ${KIMI_API_KEY:}
+    base-url: https://api.kimi.com/coding/v1
+    model: kimi-for-coding
+    max-tokens: 2048
+    # kimi-for-coding 仅允许 temperature=1
+    temperature: 1
+    thinking-enabled: true
+    # 网关按 UA 分流；不设则易被当成 overloaded。可与 Claude Code 对齐
+    user-agent: claude-cli/2.0.0
